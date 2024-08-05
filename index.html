@@ -10,14 +10,28 @@
 <body>
     <div class="container">
         <h1>Tic-Tac-Toe</h1>
-        <div class="player-setup">
-            <div class="player-input">
-                <label for="player1">Player X:</label>
-                <input type="text" id="player1" placeholder="Enter name">
+        <div class="game-setup">
+            <div class="mode-selection">
+                <button id="singlePlayerMode" class="mode-btn active">Single Player</button>
+                <button id="multiPlayerMode" class="mode-btn">Two Players</button>
             </div>
-            <div class="player-input">
-                <label for="player2">Player O:</label>
-                <input type="text" id="player2" placeholder="Enter name">
+            <div class="player-setup">
+                <div class="player-input">
+                    <label for="player1">Player X:</label>
+                    <input type="text" id="player1" placeholder="Enter name">
+                </div>
+                <div class="player-input" id="player2Container">
+                    <label for="player2">Player O:</label>
+                    <input type="text" id="player2" placeholder="Enter name">
+                </div>
+                <div class="difficulty-selection" id="difficultyContainer">
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
             </div>
             <button id="startGame">Start Game</button>
         </div>
