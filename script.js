@@ -17,6 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawsElement = document.getElementById('draws');
     const singlePlayerModeButton = document.getElementById('singlePlayerMode');
     const multiPlayerModeButton = document.getElementById('multiPlayerMode');
+    const themeToggle = document.getElementById('themeToggle');
+    const soundToggle = document.getElementById('soundToggle');
+    const leaderboard = document.getElementById('leaderboard');
+    const leaderboardBody = document.getElementById('leaderboardBody');
 
     let currentPlayer = 'X';
     let gameActive = false;
@@ -30,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
         player2Wins: 0,
         draws: 0
     };
+    let isDarkTheme = false;
+    let isSoundOn = true;
+    let leaderboardData = [];
 
     const winningCombinations = [
         [0, 1, 2],
@@ -42,6 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
         [2, 4, 6]
     ];
 
+    const sounds = {
+        place: new Audio('place.mp3'),
+        win: new Audio('win.mp3'),
+        draw: new Audio('draw.mp3'),
+        click: new Audio('click.mp3')
+    };
+
     function startGame() {
         player1Name = player1Input.value || 'Player X';
         player2Name = isSinglePlayerMode ? 'AI' : (player2Input.value || 'Player O');
@@ -50,16 +64,19 @@ document.addEventListener('DOMContentLoaded', () => {
         gameActive = true;
         difficulty = difficultySelect.value;
         restartGame();
+        leaderboard.classList.remove('hidden');
+        updateLeaderboard();
     }
 
     function handleCellClick(e) {
         const cell = e.target;
         const cellIndex = Array.from(cells).indexOf(cell);
-
+    
         if (cell.textContent !== '' || !gameActive) return;
-
+    
         placeMark(cell, currentPlayer);
-
+        playSound('place');
+    
         if (checkWin()) {
             endGame(false);
         } else if (checkDraw()) {
@@ -68,8 +85,70 @@ document.addEventListener('DOMContentLoaded', () => {
             currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
             updateStatus();
             if (isSinglePlayerMode && currentPlayer === 'O') {
-                setTimeout(makeAIMove, 500);
+                disableBoard();
+                setTimeout(() => {
+                    makeAIMove();
+                    enableBoard();
+                }, 500);
             }
+        }
+    }
+
+    function enableBoard() {
+        cells.forEach(cell => cell.style.pointerEvents = 'auto');
+    }
+
+    function disableBoard() {
+        cells.forEach(cell => cell.style.pointerEvents = 'none');
+    }
+
+    function endGame(isDraw) {
+        if (isDraw) {
+            status.textContent = "It's a draw!";
+            updateStatistics('draw');
+            playSound('draw');
+        } else {
+            const winner = currentPlayer === 'X' ? player1Name : player2Name;
+            status.textContent = `${winner} wins!`;
+            highlightWinningCombination();
+            updateStatistics(currentPlayer);
+            updateLeaderboard();
+            playSound('win');
+        }
+        gameActive = false;
+    }
+
+    function updateLeaderboard() {
+        const currentPlayerName = currentPlayer === 'X' ? player1Name : player2Name;
+        const playerIndex = leaderboardData.findIndex(player => player.name === currentPlayerName);
+        
+        if (playerIndex !== -1) {
+            leaderboardData[playerIndex].wins++;
+        } else {
+            leaderboardData.push({ name: currentPlayerName, wins: 1 });
+        }
+
+        leaderboardData.sort((a, b) => b.wins - a.wins);
+        
+        leaderboardBody.innerHTML = '';
+        leaderboardData.slice(0, 5).forEach((player, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${player.name}</td>
+                <td>${player.wins}</td>
+            `;
+            leaderboardBody.appendChild(row);
+        });
+
+        localStorage.setItem('ticTacToeLeaderboard', JSON.stringify(leaderboardData));
+    }
+
+    function loadLeaderboard() {
+        const savedLeaderboard = localStorage.getItem('ticTacToeLeaderboard');
+        if (savedLeaderboard) {
+            leaderboardData = JSON.parse(savedLeaderboard);
+            updateLeaderboard();
         }
     }
 
@@ -77,6 +156,13 @@ document.addEventListener('DOMContentLoaded', () => {
         cell.textContent = mark;
         cell.classList.add('populated');
         cell.setAttribute('aria-label', mark);
+        
+        // Add pop-in animation
+        cell.style.animation = 'none';
+        cell.offsetHeight; // Trigger reflow
+        cell.style.animation = null;
+        cell.classList.add('pop-in');
+        setTimeout(() => cell.classList.remove('pop-in'), 300);
     }
 
     function checkWin() {
@@ -126,6 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateStatus() {
         const currentPlayerName = currentPlayer === 'X' ? player1Name : player2Name;
         status.textContent = `${currentPlayerName}'s turn`;
+        status.classList.add('fade-in');
+        setTimeout(() => status.classList.remove('fade-in'), 500);
     }
 
     function handleKeyPress(e) {
@@ -260,6 +348,26 @@ document.addEventListener('DOMContentLoaded', () => {
         difficultyContainer.style.display = isSinglePlayerMode ? 'block' : 'none';
     }
 
+    function toggleTheme() {
+        isDarkTheme = !isDarkTheme;
+        document.body.classList.toggle('dark-theme', isDarkTheme);
+        themeToggle.innerHTML = isDarkTheme ? '<i class="fas fa-sun"></i> Toggle Theme' : '<i class="fas fa-moon"></i> Toggle Theme';
+        playSound('click');
+    }
+
+    function toggleSound() {
+        isSoundOn = !isSoundOn;
+        soundToggle.innerHTML = isSoundOn ? '<i class="fas fa-volume-up"></i> Toggle Sound' : '<i class="fas fa-volume-mute"></i> Toggle Sound';
+        playSound('click');
+    }
+
+    function playSound(soundName) {
+        if (isSoundOn) {
+            sounds[soundName].currentTime = 0;
+            sounds[soundName].play();
+        }
+    }
+
     cells.forEach(cell => {
         cell.addEventListener('click', handleCellClick);
         cell.addEventListener('keypress', handleKeyPress);
@@ -268,6 +376,10 @@ document.addEventListener('DOMContentLoaded', () => {
     startGameButton.addEventListener('click', startGame);
     singlePlayerModeButton.addEventListener('click', toggleGameMode);
     multiPlayerModeButton.addEventListener('click', toggleGameMode);
+    themeToggle.addEventListener('click', toggleTheme);
+    soundToggle.addEventListener('click', toggleSound);
 
     loadStatistics();
+    loadLeaderboard();
+
 });

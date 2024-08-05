@@ -6,6 +6,13 @@
     --cell-size: 100px;
 }
 
+body.dark-theme {
+    --primary-color: #66bb6a;
+    --secondary-color: #81c784;
+    --background-color: #121212;
+    --text-color: #e0e0e0;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -20,6 +27,7 @@ body {
     min-height: 100vh;
     background-color: var(--background-color);
     color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -32,6 +40,28 @@ body {
 h1 {
     margin-bottom: 20px;
     font-size: 2.5rem;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.controls button {
+    margin: 0 10px;
+    padding: 10px 15px;
+    font-size: 1rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.controls button:hover {
+    background-color: var(--secondary-color);
 }
 
 .game-setup {
@@ -83,6 +113,8 @@ input[type="text"], select {
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 4px;
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 .board {
@@ -94,7 +126,7 @@ input[type="text"], select {
 }
 
 .cell {
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
     border: 2px solid var(--text-color);
     cursor: pointer;
     display: flex;
@@ -106,7 +138,7 @@ input[type="text"], select {
 }
 
 .cell:hover {
-    background-color: #e0e0e0;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .cell:focus {
@@ -138,20 +170,31 @@ button:hover, button:focus {
     display: none;
 }
 
-.statistics {
+.statistics, .leaderboard {
     margin-top: 20px;
     padding: 15px;
-    background-color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 5px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.statistics h2 {
+.statistics h2, .leaderboard h2 {
     margin-bottom: 10px;
 }
 
 .statistics p {
     margin-bottom: 5px;
+}
+
+.leaderboard table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.leaderboard th, .leaderboard td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 @media (max-width: 480px) {
@@ -178,5 +221,14 @@ button:hover, button:focus {
 }
 
 .cell.win {
-    background-color: #90EE90;
+    background-color: rgba(144, 238, 144, 0.3);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
 }
