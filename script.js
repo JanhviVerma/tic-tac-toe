@@ -25,9 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (cell.textContent !== '' || !gameActive) return;
 
         cell.textContent = currentPlayer;
+        cell.classList.add('populated');
+        cell.setAttribute('aria-label', currentPlayer);
+
         if (checkWin()) {
             status.textContent = `Player ${currentPlayer} wins!`;
             gameActive = false;
+            highlightWinningCombination();
         } else if (checkDraw()) {
             status.textContent = "It's a draw!";
             gameActive = false;
@@ -49,14 +53,36 @@ document.addEventListener('DOMContentLoaded', () => {
         return Array.from(cells).every(cell => cell.textContent !== '');
     }
 
+    function highlightWinningCombination() {
+        winningCombinations.forEach(combination => {
+            if (combination.every(index => cells[index].textContent === currentPlayer)) {
+                combination.forEach(index => cells[index].style.backgroundColor = '#90EE90');
+            }
+        });
+    }
+
     function restartGame() {
         currentPlayer = 'X';
         gameActive = true;
-        cells.forEach(cell => cell.textContent = '');
+        cells.forEach(cell => {
+            cell.textContent = '';
+            cell.classList.remove('populated');
+            cell.style.backgroundColor = '';
+            cell.setAttribute('aria-label', 'Empty');
+        });
         status.textContent = `Player ${currentPlayer}'s turn`;
     }
 
-    cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+    function handleKeyPress(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            handleCellClick(e);
+        }
+    }
+
+    cells.forEach(cell => {
+        cell.addEventListener('click', handleCellClick);
+        cell.addEventListener('keypress', handleKeyPress);
+    });
     restartButton.addEventListener('click', restartGame);
 
     status.textContent = `Player ${currentPlayer}'s turn`;

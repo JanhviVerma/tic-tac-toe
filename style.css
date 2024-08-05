@@ -1,3 +1,11 @@
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #45a049;
+    --background-color: #f0f0f0;
+    --text-color: #333;
+    --cell-size: 100px;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -5,58 +13,93 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: #f0f0f0;
+    min-height: 100vh;
+    background-color: var(--background-color);
+    color: var(--text-color);
 }
 
 .container {
     text-align: center;
+    padding: 20px;
 }
 
 h1 {
     margin-bottom: 20px;
-    color: #333;
+    font-size: 2.5rem;
 }
 
 .board {
     display: grid;
-    grid-template-columns: repeat(3, 100px);
-    grid-template-rows: repeat(3, 100px);
+    grid-template-columns: repeat(3, var(--cell-size));
+    grid-template-rows: repeat(3, var(--cell-size));
     gap: 5px;
-    margin-bottom: 20px;
+    margin: 0 auto 20px;
 }
 
 .cell {
     background-color: #fff;
-    border: 2px solid #333;
+    border: 2px solid var(--text-color);
     cursor: pointer;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 40px;
+    font-size: 2.5rem;
     font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.cell:hover {
+    background-color: #e0e0e0;
+}
+
+.cell:focus {
+    outline: 3px solid var(--primary-color);
 }
 
 .status {
-    margin-bottom: 10px;
-    font-size: 18px;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
     font-weight: bold;
 }
 
 button {
     padding: 10px 20px;
-    font-size: 16px;
-    background-color: #4CAF50;
+    font-size: 1rem;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     cursor: pointer;
     border-radius: 5px;
+    transition: background-color 0.3s ease;
 }
 
-button:hover {
-    background-color: #45a049;
+button:hover, button:focus {
+    background-color: var(--secondary-color);
+}
+
+@media (max-width: 480px) {
+    :root {
+        --cell-size: 80px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .cell {
+        font-size: 2rem;
+    }
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.cell.populated {
+    animation: popIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
