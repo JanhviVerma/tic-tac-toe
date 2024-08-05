@@ -10,19 +10,39 @@
 <body>
     <div class="container">
         <h1>Tic-Tac-Toe</h1>
-        <div id="board" class="board" role="grid">
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
-            <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+        <div class="player-setup">
+            <div class="player-input">
+                <label for="player1">Player X:</label>
+                <input type="text" id="player1" placeholder="Enter name">
+            </div>
+            <div class="player-input">
+                <label for="player2">Player O:</label>
+                <input type="text" id="player2" placeholder="Enter name">
+            </div>
+            <button id="startGame">Start Game</button>
         </div>
-        <div class="status" id="status" aria-live="polite"></div>
-        <button id="restartButton">Restart Game</button>
+        <div id="gameArea" class="hidden">
+            <div id="board" class="board" role="grid">
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+                <div class="cell" data-cell role="gridcell" tabindex="0" aria-label="Empty"></div>
+            </div>
+            <div class="status" id="status" aria-live="polite"></div>
+            <button id="restartButton">Restart Game</button>
+        </div>
+        <div id="statistics" class="statistics hidden">
+            <h2>Game Statistics</h2>
+            <p>Games Played: <span id="gamesPlayed">0</span></p>
+            <p>Player X Wins: <span id="player1Wins">0</span></p>
+            <p>Player O Wins: <span id="player2Wins">0</span></p>
+            <p>Draws: <span id="draws">0</span></p>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

@@ -25,11 +25,34 @@ body {
 .container {
     text-align: center;
     padding: 20px;
+    max-width: 500px;
+    width: 100%;
 }
 
 h1 {
     margin-bottom: 20px;
     font-size: 2.5rem;
+}
+
+.player-setup {
+    margin-bottom: 20px;
+}
+
+.player-input {
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
 .board {
@@ -79,6 +102,26 @@ button {
 
 button:hover, button:focus {
     background-color: var(--secondary-color);
+}
+
+.hidden {
+    display: none;
+}
+
+.statistics {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.statistics h2 {
+    margin-bottom: 10px;
+}
+
+.statistics p {
+    margin-bottom: 5px;
 }
 
 @media (max-width: 480px) {
