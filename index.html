@@ -3,39 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-Tac-Toe Deluxe</title>
+    <title>Tic-Tac-Toe Ultimate</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1>Tic-Tac-Toe Deluxe</h1>
+        <h1>Tic-Tac-Toe Ultimate</h1>
         <div class="controls">
             <button id="themeToggle"><i class="fas fa-adjust"></i> Toggle Theme</button>
             <button id="soundToggle"><i class="fas fa-volume-up"></i> Toggle Sound</button>
         </div>
         <div class="game-setup">
             <div class="mode-selection">
-                <button id="singlePlayerMode" class="mode-btn active">Single Player</button>
-                <button id="multiPlayerMode" class="mode-btn">Two Players</button>
+                <button id="singlePlayerMode" class="mode-btn">Single Player</button>
+                <button id="localMultiPlayerMode" class="mode-btn">Local Multiplayer</button>
+                <button id="onlineMultiPlayerMode" class="mode-btn active">Online Multiplayer</button>
             </div>
             <div class="player-setup">
                 <div class="player-input">
-                    <label for="player1">Player X:</label>
-                    <input type="text" id="player1" placeholder="Enter name">
+                    <label for="playerName">Your Name:</label>
+                    <input type="text" id="playerName" placeholder="Enter your name">
                 </div>
-                <div class="player-input" id="player2Container">
-                    <label for="player2">Player O:</label>
-                    <input type="text" id="player2" placeholder="Enter name">
-                </div>
-                <div class="difficulty-selection" id="difficultyContainer">
-                    <label for="difficulty">Difficulty:</label>
-                    <select id="difficulty">
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
+                <div class="online-controls">
+                    <button id="createRoom">Create Room</button>
+                    <input type="text" id="roomCode" placeholder="Enter room code">
+                    <button id="joinRoom">Join Room</button>
                 </div>
             </div>
             <button id="startGame">Start Game</button>
@@ -55,11 +49,21 @@
             <div class="status" id="status" aria-live="polite"></div>
             <button id="restartButton">Restart Game</button>
         </div>
+        <div id="chatArea" class="chat-area hidden">
+            <div id="chatMessages" class="chat-messages"></div>
+            <input type="text" id="chatInput" placeholder="Type your message...">
+            <button id="sendMessage">Send</button>
+        </div>
+        <div id="spectatorArea" class="spectator-area hidden">
+            <h2>Spectator Mode</h2>
+            <p>You are watching a game. Current players:</p>
+            <ul id="playerList"></ul>
+        </div>
         <div id="statistics" class="statistics hidden">
             <h2>Game Statistics</h2>
             <p>Games Played: <span id="gamesPlayed">0</span></p>
-            <p>Player X Wins: <span id="player1Wins">0</span></p>
-            <p>Player O Wins: <span id="player2Wins">0</span></p>
+            <p>Wins: <span id="playerWins">0</span></p>
+            <p>Losses: <span id="playerLosses">0</span></p>
             <p>Draws: <span id="draws">0</span></p>
         </div>
         <div id="leaderboard" class="leaderboard hidden">

@@ -21,6 +21,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const soundToggle = document.getElementById('soundToggle');
     const leaderboard = document.getElementById('leaderboard');
     const leaderboardBody = document.getElementById('leaderboardBody');
+    const createRoomButton = document.getElementById('createRoom');
+    const joinRoomButton = document.getElementById('joinRoom');
+    const roomCodeInput = document.getElementById('roomCode');
+    const chatArea = document.getElementById('chatArea');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendMessageButton = document.getElementById('sendMessage');
+    const spectatorArea = document.getElementById('spectatorArea');
+    const playerList = document.getElementById('playerList');
+    const playerNameInput = document.getElementById('playerName');
+    // const singlePlayerModeButton = document.getElementById('singlePlayerMode');
+    const localMultiPlayerModeButton = document.getElementById('localMultiPlayerMode');
+    const onlineMultiPlayerModeButton = document.getElementById('onlineMultiPlayerMode');
 
     let currentPlayer = 'X';
     let gameActive = false;
@@ -37,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let isDarkTheme = false;
     let isSoundOn = true;
     let leaderboardData = [];
+    let isOnlineMode = true;
+    let isSpectator = false;
+    let roomCode = '';
+    let playerName = '';
+    let socket;
 
     const winningCombinations = [
         [0, 1, 2],
@@ -55,6 +73,145 @@ document.addEventListener('DOMContentLoaded', () => {
         draw: new Audio('draw.mp3'),
         click: new Audio('click.mp3')
     };
+
+    function initializeWebSocket() {
+        // In a real implementation, you would connect to your WebSocket server here
+        socket = {
+            send: function(data) {
+                console.log('Sent:', data);
+                // Simulate receiving the same data
+                setTimeout(() => this.onmessage({data: data}), 100);
+            },
+            onmessage: function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            }
+        };
+    }
+
+    function handleWebSocketMessage(data) {
+        switch(data.type) {
+            case 'move':
+                handleOpponentMove(data.cell);
+                break;
+            case 'chat':
+                addChatMessage(data.player, data.message);
+                break;
+            case 'playerJoined':
+                updatePlayerList(data.players);
+                break;
+            case 'gameStart':
+                startOnlineGame(data.players);
+                break;
+            // Add more cases as needed
+        }
+    }
+
+    function createRoom() {
+        roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+        socket.send(JSON.stringify({type: 'createRoom', room: roomCode, player: playerName}));
+        roomCodeInput.value = roomCode;
+    }
+
+    function joinRoom() {
+        roomCode = roomCodeInput.value.toUpperCase();
+        socket.send(JSON.stringify({type: 'joinRoom', room: roomCode, player: playerName}));
+    }
+
+    function sendChatMessage() {
+        const message = chatInput.value.trim();
+        if (message) {
+            socket.send(JSON.stringify({type: 'chat', room: roomCode, player: playerName, message: message}));
+            chatInput.value = '';
+        }
+    }
+
+    function addChatMessage(player, message) {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('chat-message');
+        messageElement.textContent = `${player}: ${message}`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function updatePlayerList(players) {
+        playerList.innerHTML = '';
+        players.forEach(player => {
+            const li = document.createElement('li');
+            li.textContent = player;
+            playerList.appendChild(li);
+        });
+    }
+
+    function startOnlineGame(players) {
+        if (players.indexOf(playerName) === -1) {
+            isSpectator = true;
+            spectatorArea.classList.remove('hidden');
+        } else {
+            isSpectator = false;
+            spectatorArea.classList.add('hidden');
+        }
+        gameArea.classList.remove('hidden');
+        chatArea.classList.remove('hidden');
+        updatePlayerList(players);
+    }
+
+    function handleOpponentMove(cellIndex) {
+        if (!isSpectator && currentPlayer !== 'O') return;
+        const cell = cells[cellIndex];
+        placeMark(cell, 'O');
+        if (checkWin()) {
+            endGame(false);
+        } else if (checkDraw()) {
+            endGame(true);
+        } else {
+            currentPlayer = 'X';
+            updateStatus();
+        }
+    }
+
+    function handleCellClick(e) {
+        if (isSpectator) return;
+        
+        const cell = e.target;
+        const cellIndex = Array.from(cells).indexOf(cell);
+
+        if (cell.textContent !== '' || !gameActive || (isOnlineMode && currentPlayer !== 'X')) return;
+
+        placeMark(cell, currentPlayer);
+        playSound('place');
+
+        if (isOnlineMode) {
+            socket.send(JSON.stringify({type: 'move', room: roomCode, player: playerName, cell: cellIndex}));
+        }
+
+        if (checkWin()) {
+            endGame(false);
+        } else if (checkDraw()) {
+            endGame(true);
+        } else {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            updateStatus();
+            if (isSinglePlayerMode && currentPlayer === 'O') {
+                disableBoard();
+                setTimeout(() => {
+                    makeAIMove();
+                    enableBoard();
+                }, 500);
+            }
+        }
+    }
+
+    function toggleGameMode(mode) {
+        isSinglePlayerMode = mode === 'single';
+        isOnlineMode = mode === 'online';
+        singlePlayerModeButton.classList.toggle('active', mode === 'single');
+        localMultiPlayerModeButton.classList.toggle('active', mode === 'local');
+        onlineMultiPlayerModeButton.classList.toggle('active', mode === 'online');
+        
+        const onlineElements = document.querySelectorAll('.online-controls, #playerName');
+        onlineElements.forEach(el => el.style.display = isOnlineMode ? 'block' : 'none');
+    }
 
     function startGame() {
         player1Name = player1Input.value || 'Player X';
@@ -378,7 +535,21 @@ document.addEventListener('DOMContentLoaded', () => {
     multiPlayerModeButton.addEventListener('click', toggleGameMode);
     themeToggle.addEventListener('click', toggleTheme);
     soundToggle.addEventListener('click', toggleSound);
+    createRoomButton.addEventListener('click', createRoom);
+    joinRoomButton.addEventListener('click', joinRoom);
+    sendMessageButton.addEventListener('click', sendChatMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+    });
+    singlePlayerModeButton.addEventListener('click', () => toggleGameMode('single'));
+    localMultiPlayerModeButton.addEventListener('click', () => toggleGameMode('local'));
+    onlineMultiPlayerModeButton.addEventListener('click', () => toggleGameMode('online'));
 
+    playerNameInput.addEventListener('change', (e) => {
+        playerName = e.target.value;
+    });
+
+    initializeWebSocket();
     loadStatistics();
     loadLeaderboard();
 
