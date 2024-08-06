@@ -4,6 +4,7 @@
     --background-color: #f0f0f0;
     --text-color: #333;
     --cell-size: 100px;
+    --board-size: 300px;
 }
 
 body.dark-theme {
@@ -33,7 +34,7 @@ body {
 .container {
     text-align: center;
     padding: 20px;
-    max-width: 500px;
+    max-width: 600px;
     width: 100%;
 }
 
@@ -119,10 +120,12 @@ input[type="text"], select {
 
 .board {
     display: grid;
-    grid-template-columns: repeat(3, var(--cell-size));
-    grid-template-rows: repeat(3, var(--cell-size));
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
     gap: 5px;
     margin: 0 auto 20px;
+    width: var(--board-size);
+    height: var(--board-size);
 }
 
 .cell {
@@ -170,7 +173,7 @@ button:hover, button:focus {
     display: none;
 }
 
-.statistics, .leaderboard {
+.statistics, .leaderboard, .game-history {
     margin-top: 20px;
     padding: 15px;
     background-color: rgba(255, 255, 255, 0.1);
@@ -178,7 +181,7 @@ button:hover, button:focus {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.statistics h2, .leaderboard h2 {
+.statistics h2, .leaderboard h2, .game-history h2 {
     margin-bottom: 10px;
 }
 
@@ -186,12 +189,12 @@ button:hover, button:focus {
     margin-bottom: 5px;
 }
 
-.leaderboard table {
+.leaderboard table, .game-history table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.leaderboard th, .leaderboard td {
+.leaderboard th, .leaderboard td, .game-history th, .game-history td {
     padding: 8px;
     text-align: left;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -280,9 +283,56 @@ button:hover, button:focus {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+.emoji-reaction {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    animation: fadeInOut 3.5s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    10%, 90% { opacity: 1; }
+}
+
+.game-history {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.game-history ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.game-history li {
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+}
+
+.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 @media (max-width: 480px) {
     :root {
         --cell-size: 80px;
+        --board-size: 240px;
     }
 
     h1 {
@@ -295,6 +345,14 @@ button:hover, button:focus {
 
     .mode-btn {
         flex: 1 0 100%;
+    }
+
+    .controls {
+        flex-direction: column;
+    }
+
+    .controls button {
+        margin: 5px 0;
     }
 }
 
@@ -318,4 +376,13 @@ button:hover, button:focus {
 
 .fade-in {
     animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.fade-out {
+    animation: fadeOut 0.5s ease-in;
 }

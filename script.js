@@ -4,21 +4,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = document.getElementById('status');
     const restartButton = document.getElementById('restartButton');
     const startGameButton = document.getElementById('startGame');
-    const player1Input = document.getElementById('player1');
-    const player2Input = document.getElementById('player2');
-    const player2Container = document.getElementById('player2Container');
-    const difficultyContainer = document.getElementById('difficultyContainer');
-    const difficultySelect = document.getElementById('difficulty');
     const gameArea = document.getElementById('gameArea');
     const statistics = document.getElementById('statistics');
     const gamesPlayedElement = document.getElementById('gamesPlayed');
-    const player1WinsElement = document.getElementById('player1Wins');
-    const player2WinsElement = document.getElementById('player2Wins');
+    const playerWinsElement = document.getElementById('playerWins');
+    const playerLossesElement = document.getElementById('playerLosses');
     const drawsElement = document.getElementById('draws');
     const singlePlayerModeButton = document.getElementById('singlePlayerMode');
-    const multiPlayerModeButton = document.getElementById('multiPlayerMode');
+    const localMultiPlayerModeButton = document.getElementById('localMultiPlayerMode');
+    const onlineMultiPlayerModeButton = document.getElementById('onlineMultiPlayerMode');
     const themeToggle = document.getElementById('themeToggle');
     const soundToggle = document.getElementById('soundToggle');
+    const fullscreenToggle = document.getElementById('fullscreenToggle');
     const leaderboard = document.getElementById('leaderboard');
     const leaderboardBody = document.getElementById('leaderboardBody');
     const createRoomButton = document.getElementById('createRoom');
@@ -31,30 +28,33 @@ document.addEventListener('DOMContentLoaded', () => {
     const spectatorArea = document.getElementById('spectatorArea');
     const playerList = document.getElementById('playerList');
     const playerNameInput = document.getElementById('playerName');
-    // const singlePlayerModeButton = document.getElementById('singlePlayerMode');
-    const localMultiPlayerModeButton = document.getElementById('localMultiPlayerMode');
-    const onlineMultiPlayerModeButton = document.getElementById('onlineMultiPlayerMode');
+    const emojiReactions = document.getElementById('emojiReactions');
+    const gameHistory = document.getElementById('gameHistory');
+    const historyList = document.getElementById('historyList');
 
     let currentPlayer = 'X';
     let gameActive = false;
     let player1Name = 'Player X';
     let player2Name = 'Player O';
-    let isSinglePlayerMode = true;
-    let difficulty = 'easy';
+    let isSinglePlayerMode = false;
+    let isLocalMultiPlayerMode = false;
+    let isOnlineMode = true;
+    let difficulty = 'medium';
     let gameStats = {
         gamesPlayed: 0,
-        player1Wins: 0,
-        player2Wins: 0,
+        playerWins: 0,
+        playerLosses: 0,
         draws: 0
     };
     let isDarkTheme = false;
     let isSoundOn = true;
+    let isFullscreen = false;
     let leaderboardData = [];
-    let isOnlineMode = true;
     let isSpectator = false;
     let roomCode = '';
     let playerName = '';
     let socket;
+    let gameHistory = [];
 
     const winningCombinations = [
         [0, 1, 2],
@@ -103,7 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'gameStart':
                 startOnlineGame(data.players);
                 break;
-            // Add more cases as needed
+            case 'emoji':
+                handleEmojiReaction(data.player, data.emoji);
+                break;
         }
     }
 
@@ -204,109 +206,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleGameMode(mode) {
         isSinglePlayerMode = mode === 'single';
+        isLocalMultiPlayerMode = mode === 'local';
         isOnlineMode = mode === 'online';
-        singlePlayerModeButton.classList.toggle('active', mode === 'single');
-        localMultiPlayerModeButton.classList.toggle('active', mode === 'local');
-        onlineMultiPlayerModeButton.classList.toggle('active', mode === 'online');
+        singlePlayerModeButton.classList.toggle('active', isSinglePlayerMode);
+        localMultiPlayerModeButton.classList.toggle('active', isLocalMultiPlayerMode);
+        onlineMultiPlayerModeButton.classList.toggle('active', isOnlineMode);
         
         const onlineElements = document.querySelectorAll('.online-controls, #playerName');
         onlineElements.forEach(el => el.style.display = isOnlineMode ? 'block' : 'none');
     }
 
     function startGame() {
-        player1Name = player1Input.value || 'Player X';
-        player2Name = isSinglePlayerMode ? 'AI' : (player2Input.value || 'Player O');
+        player1Name = playerNameInput.value || 'Player X';
+        player2Name = isSinglePlayerMode ? 'AI' : (isOnlineMode ? 'Opponent' : 'Player O');
         gameArea.classList.remove('hidden');
         statistics.classList.remove('hidden');
         gameActive = true;
-        difficulty = difficultySelect.value;
         restartGame();
         leaderboard.classList.remove('hidden');
         updateLeaderboard();
-    }
-
-    function handleCellClick(e) {
-        const cell = e.target;
-        const cellIndex = Array.from(cells).indexOf(cell);
-    
-        if (cell.textContent !== '' || !gameActive) return;
-    
-        placeMark(cell, currentPlayer);
-        playSound('place');
-    
-        if (checkWin()) {
-            endGame(false);
-        } else if (checkDraw()) {
-            endGame(true);
-        } else {
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-            updateStatus();
-            if (isSinglePlayerMode && currentPlayer === 'O') {
-                disableBoard();
-                setTimeout(() => {
-                    makeAIMove();
-                    enableBoard();
-                }, 500);
-            }
-        }
-    }
-
-    function enableBoard() {
-        cells.forEach(cell => cell.style.pointerEvents = 'auto');
-    }
-
-    function disableBoard() {
-        cells.forEach(cell => cell.style.pointerEvents = 'none');
-    }
-
-    function endGame(isDraw) {
-        if (isDraw) {
-            status.textContent = "It's a draw!";
-            updateStatistics('draw');
-            playSound('draw');
-        } else {
-            const winner = currentPlayer === 'X' ? player1Name : player2Name;
-            status.textContent = `${winner} wins!`;
-            highlightWinningCombination();
-            updateStatistics(currentPlayer);
-            updateLeaderboard();
-            playSound('win');
-        }
-        gameActive = false;
-    }
-
-    function updateLeaderboard() {
-        const currentPlayerName = currentPlayer === 'X' ? player1Name : player2Name;
-        const playerIndex = leaderboardData.findIndex(player => player.name === currentPlayerName);
-        
-        if (playerIndex !== -1) {
-            leaderboardData[playerIndex].wins++;
-        } else {
-            leaderboardData.push({ name: currentPlayerName, wins: 1 });
-        }
-
-        leaderboardData.sort((a, b) => b.wins - a.wins);
-        
-        leaderboardBody.innerHTML = '';
-        leaderboardData.slice(0, 5).forEach((player, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${player.name}</td>
-                <td>${player.wins}</td>
-            `;
-            leaderboardBody.appendChild(row);
-        });
-
-        localStorage.setItem('ticTacToeLeaderboard', JSON.stringify(leaderboardData));
-    }
-
-    function loadLeaderboard() {
-        const savedLeaderboard = localStorage.getItem('ticTacToeLeaderboard');
-        if (savedLeaderboard) {
-            leaderboardData = JSON.parse(savedLeaderboard);
-            updateLeaderboard();
-        }
+        emojiReactions.classList.remove('hidden');
+        gameHistory.classList.remove('hidden');
     }
 
     function placeMark(cell, mark) {
@@ -314,7 +234,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cell.classList.add('populated');
         cell.setAttribute('aria-label', mark);
         
-        // Add pop-in animation
         cell.style.animation = 'none';
         cell.offsetHeight; // Trigger reflow
         cell.style.animation = null;
@@ -338,13 +257,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isDraw) {
             status.textContent = "It's a draw!";
             updateStatistics('draw');
+            playSound('draw');
         } else {
             const winner = currentPlayer === 'X' ? player1Name : player2Name;
             status.textContent = `${winner} wins!`;
             highlightWinningCombination();
             updateStatistics(currentPlayer);
+            updateLeaderboard();
+            playSound('win');
         }
         gameActive = false;
+        addToGameHistory(isDraw);
     }
 
     function highlightWinningCombination() {
@@ -373,18 +296,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => status.classList.remove('fade-in'), 500);
     }
 
-    function handleKeyPress(e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-            handleCellClick(e);
-        }
-    }
-
     function updateStatistics(result) {
         gameStats.gamesPlayed++;
         if (result === 'X') {
-            gameStats.player1Wins++;
+            gameStats.playerWins++;
         } else if (result === 'O') {
-            gameStats.player2Wins++;
+            gameStats.playerLosses++;
         } else {
             gameStats.draws++;
         }
@@ -394,8 +311,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateStatisticsDisplay() {
         gamesPlayedElement.textContent = gameStats.gamesPlayed;
-        player1WinsElement.textContent = gameStats.player1Wins;
-        player2WinsElement.textContent = gameStats.player2Wins;
+        playerWinsElement.textContent = gameStats.playerWins;
+        playerLossesElement.textContent = gameStats.playerLosses;
         drawsElement.textContent = gameStats.draws;
     }
 
@@ -497,14 +414,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function toggleGameMode() {
-        isSinglePlayerMode = !isSinglePlayerMode;
-        singlePlayerModeButton.classList.toggle('active');
-        multiPlayerModeButton.classList.toggle('active');
-        player2Container.style.display = isSinglePlayerMode ? 'none' : 'block';
-        difficultyContainer.style.display = isSinglePlayerMode ? 'block' : 'none';
-    }
-
     function toggleTheme() {
         isDarkTheme = !isDarkTheme;
         document.body.classList.toggle('dark-theme', isDarkTheme);
@@ -518,6 +427,20 @@ document.addEventListener('DOMContentLoaded', () => {
         playSound('click');
     }
 
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+            isFullscreen = true;
+            fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i> Exit Fullscreen';
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+                isFullscreen = false;
+                fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i> Fullscreen';
+            }
+        }
+    }
+
     function playSound(soundName) {
         if (isSoundOn) {
             sounds[soundName].currentTime = 0;
@@ -525,16 +448,100 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function updateLeaderboard() {
+        const currentPlayerName = currentPlayer === 'X' ? player1Name : player2Name;
+        const playerIndex = leaderboardData.findIndex(player => player.name === currentPlayerName);
+        
+        if (playerIndex !== -1) {
+            leaderboardData[playerIndex].wins++;
+        } else {
+            leaderboardData.push({ name: currentPlayerName, wins: 1 });
+        }
+
+        leaderboardData.sort((a, b) => b.wins - a.wins);
+        
+        leaderboardBody.innerHTML = '';
+        leaderboardData.slice(0, 5).forEach((player, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${player.name}</td>
+                <td>${player.wins}</td>
+            `;
+            leaderboardBody.appendChild(row);
+        });
+
+        localStorage.setItem('ticTacToeLeaderboard', JSON.stringify(leaderboardData));
+    }
+
+    function loadLeaderboard() {
+        const savedLeaderboard = localStorage.getItem('ticTacToeLeaderboard');
+        if (savedLeaderboard) {
+            leaderboardData = JSON.parse(savedLeaderboard);
+            updateLeaderboard();
+        }
+    }
+
+    function handleEmojiReaction(player, emoji) {
+        const reactionElement = document.createElement('div');
+        reactionElement.textContent = `${player} reacted with ${emoji}`;
+        reactionElement.classList.add('emoji-reaction', 'fade-in');
+        chatMessages.appendChild(reactionElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        setTimeout(() => {
+            reactionElement.classList.remove('fade-in');
+            reactionElement.classList.add('fade-out');
+        }, 3000);
+
+        setTimeout(() => {
+            chatMessages.removeChild(reactionElement);
+        }, 3500);
+    }
+
+    function addToGameHistory(isDraw) {
+        const result = isDraw ? "Draw" : `${currentPlayer === 'X' ? player1Name : player2Name} won`;
+        const historyEntry = `Game ${gameStats.gamesPlayed}: ${result}`;
+        gameHistory.unshift(historyEntry);
+
+        if (gameHistory.length > 10) {
+            gameHistory.pop();
+        }
+
+        updateGameHistoryDisplay();
+    }
+
+    function updateGameHistoryDisplay() {
+        historyList.innerHTML = '';
+        gameHistory.forEach(entry => {
+            const li = document.createElement('li');
+            li.textContent = entry;
+            historyList.appendChild(li);
+        });
+    }
+
+    function enableBoard() {
+        cells.forEach(cell => cell.style.pointerEvents = 'auto');
+    }
+
+    function disableBoard() {
+        cells.forEach(cell => cell.style.pointerEvents = 'none');
+    }
+
     cells.forEach(cell => {
         cell.addEventListener('click', handleCellClick);
-        cell.addEventListener('keypress', handleKeyPress);
+        cell.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                handleCellClick(e);
+            }
+        });
     });
+
     restartButton.addEventListener('click', restartGame);
     startGameButton.addEventListener('click', startGame);
-    singlePlayerModeButton.addEventListener('click', toggleGameMode);
-    multiPlayerModeButton.addEventListener('click', toggleGameMode);
     themeToggle.addEventListener('click', toggleTheme);
     soundToggle.addEventListener('click', toggleSound);
+    fullscreenToggle.addEventListener('click', toggleFullscreen);
     createRoomButton.addEventListener('click', createRoom);
     joinRoomButton.addEventListener('click', joinRoom);
     sendMessageButton.addEventListener('click', sendChatMessage);
@@ -549,8 +556,14 @@ document.addEventListener('DOMContentLoaded', () => {
         playerName = e.target.value;
     });
 
+    emojiReactions.querySelectorAll('.emoji-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const emoji = btn.dataset.emoji;
+            socket.send(JSON.stringify({type: 'emoji', room: roomCode, player: playerName, emoji: emoji}));
+        });
+    });
+
     initializeWebSocket();
     loadStatistics();
     loadLeaderboard();
-
 });
